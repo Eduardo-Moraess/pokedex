@@ -65,14 +65,12 @@ class myclient(discord.Client):
 
                     embed.set_image(url = fotopokemon)
                     embed.set_footer(text = 'Essa informação veio da pokeApi', icon_url = 'https://raw.githubusercontent.com/PokeAPI/media/master/logo/pokeapi_256.png')
-                    # embed.set_thumbnail(pokeicon)
 
                     await message.channel.send (embed = embed)
                 
                 else:
                     await message.channel.send('não encontrei esse pokemon, tente outro, por favor? :(')
                     
-            
 
 client = myclient(intents=intents)
 client.run(DISCORD_KEY)
