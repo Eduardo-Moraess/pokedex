@@ -1,16 +1,15 @@
-import requests
-import discord
 import os
 from dotenv import load_dotenv
-
-intents = discord.Intents.default()
-intents.typing = False
-intents.presences = False
-intents.members = True
-intents.message_content = True
+import discord
+import requests
+from discord.ext import commands
+from discord.flags import Intents
+import asyncio
+intents = discord.Intents.all()
 
 load_dotenv()
 DISCORD_KEY = os.getenv('DISCORD_KEY')
+
 
 imgs = {
 	'normal': ['https://archives.bulbagarden.net/media/upload/7/73/GO_Normal_M.png',0xA8A77A,'Normal'],
@@ -33,44 +32,39 @@ imgs = {
 	'fairy': ['https://archives.bulbagarden.net/media/upload/a/a7/GO_Fairy_M.png',0xD685AD,'Fada']
 }
 
-class myclient(discord.Client):
-    async def on_message(self, message):
-        if not message.author.bot:
+bot = commands.Bot(command_prefix='$', intents= intents)
 
-            mensagem = message.content
-            if ('?' in message.content):
-                poke = mensagem.replace('?', '')
-                url = f'https://pokeapi.co/api/v2/pokemon/{poke}'
+@bot.event
+async def on_command_error(ctx, error):
+    if isinstance(error, discord.ext.commands.errors.CommandNotFound):
+        await ctx.send("Comando não encontrado, para o de pokemon use `$poke`")
 
-                response = requests.get(url)
-                
-                if response.status_code == 200:
-                    data = response.json()
-                    fotopokemon = data['sprites']['other']['official-artwork']['front_default']
-                    nomepokemon = data['name']
-                    
-                    tiposdokemon = []
-                    if len(data['types']) > 1:
-                        tiposdokemon = data['types'][0]['type']['name'],data['types'][1]['type']['name']
-                        embed = discord.Embed (title = nomepokemon.capitalize(), description = f'Este pokemon é dos tipos:', colour=imgs[tiposdokemon[0]][1])  
-                        embed.add_field(name=f'•{imgs[tiposdokemon[0]][2]}', value='' , inline=False)                        
-                        embed.add_field(name=f'•{imgs[tiposdokemon[1]][2]}', value='' , inline=False)
-                        embed.set_thumbnail(url=imgs[tiposdokemon[0]][0])
+@bot.command(description='Ativa o bot de pokemon')
+async def poke(ctx,poke):
+    url = f'https://pokeapi.co/api/v2/pokemon/{poke}'
+    response = requests.get(url)                
+    if response.status_code == 200:
+        data = response.json()
+        fotopokemon = data['sprites']['other']['official-artwork']['front_default']
+        nomepokemon = data['name']                   
+        tiposdokemon = []
+        if len(data['types']) > 1:
+            tiposdokemon = data['types'][0]['type']['name'],data['types'][1]['type']['name']
+            embed = discord.Embed (title = nomepokemon.capitalize(), description = f'Este pokemon é dos tipos:', colour=imgs[tiposdokemon[0]][1])  
+            embed.add_field(name=f'•{imgs[tiposdokemon[0]][2]}', value='' , inline=False)                        
+            embed.add_field(name=f'•{imgs[tiposdokemon[1]][2]}', value='' , inline=False)
+            embed.set_thumbnail(url=imgs[tiposdokemon[0]][0])
+        else:
+            tiposdokemon = data['types'][0]['type']['name']
+            embed = discord.Embed (title = nomepokemon.capitalize(), description = f'Este pokemon é do tipo:', colour=imgs[tiposdokemon][1])  
+            embed.add_field(name=f'•{imgs[tiposdokemon][2]}', value='' , inline=False)                        
+            embed.set_thumbnail(url=imgs[tiposdokemon][0])
+        embed.set_image(url = fotopokemon)
+        embed.set_footer(text = 'Essa informação veio da pokeApi', icon_url = 'https://raw.githubusercontent.com/PokeAPI/media/master/logo/pokeapi_256.png')
 
-                    else:
-                        tiposdokemon = data['types'][0]['type']['name']
-                        embed = discord.Embed (title = nomepokemon.capitalize(), description = f'Este pokemon é do tipo:', colour=imgs[tiposdokemon][1])  
-                        embed.add_field(name=f'•{imgs[tiposdokemon][2]}', value='' , inline=False)                        
-                        embed.set_thumbnail(url=imgs[tiposdokemon][0])
+        await ctx.send (embed=embed)
+    
+    else:
+        await ctx.send('não encontrei esse pokemon, tente outro, por favor? :(')
 
-                    embed.set_image(url = fotopokemon)
-                    embed.set_footer(text = 'Essa informação veio da pokeApi', icon_url = 'https://raw.githubusercontent.com/PokeAPI/media/master/logo/pokeapi_256.png')
-
-                    await message.channel.send (embed = embed)
-                
-                else:
-                    await message.channel.send('não encontrei esse pokemon, tente outro, por favor? :(')
-                    
-
-client = myclient(intents=intents)
-client.run(DISCORD_KEY)
+bot.run(DISCORD_KEY)
