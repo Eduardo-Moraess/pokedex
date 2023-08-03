@@ -3,8 +3,6 @@ from dotenv import load_dotenv
 import discord
 import requests
 from discord.ext import commands
-from discord.flags import Intents
-import asyncio
 intents = discord.Intents.all()
 
 load_dotenv()
@@ -37,7 +35,7 @@ bot = commands.Bot(command_prefix='$', intents= intents)
 @bot.event
 async def on_command_error(ctx, error):
     if isinstance(error, discord.ext.commands.errors.CommandNotFound):
-        await ctx.send("Comando não encontrado, para o de pokemon use `$poke`")
+        await ctx.send("Comando não encontrado, para o de pokemon use `$poke` e para o de metereologia use `$xxx`")
 
 @bot.command(description='Ativa o bot de pokemon')
 async def poke(ctx,poke):
@@ -66,5 +64,9 @@ async def poke(ctx,poke):
     
     else:
         await ctx.send('não encontrei esse pokemon, tente outro, por favor? :(')
+
+
+# @bot.command(description='Ativa o bot de metereologia')
+# async def tempo(ctx,cidade):
 
 bot.run(DISCORD_KEY)
